@@ -38,17 +38,21 @@
 
 // Returns YES if Google Chrome is installed in the user's system.
 - (BOOL)isChromeInstalled;
+- (BOOL)isFirefoxInstalled;
 
 // Opens a URL in Google Chrome.
 - (BOOL)openInChrome:(NSURL *)url;
+- (BOOL)openInFirefox:(NSURL *)url;
 
 // Open a URL in Google Chrome providing a |callbackURL| to return to the app.
 // URLs from the same app will be opened in the same tab unless |createNewTab|
 // is set to YES.
 // |callbackURL| can be nil.
 // The return value of this method is YES if the URL is successfully opened.
-- (BOOL)openInChrome:(NSURL *)url
+- (BOOL)openURL:(NSURL *)url
+     simple:(NSString *)simpleScheme
+     callback:(NSString *)callbackScheme
      withCallbackURL:(NSURL *)callbackURL
-        createNewTab:(BOOL)createNewTab;
+     createNewTab:(BOOL)createNewTab;
 
 @end

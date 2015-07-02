@@ -38,6 +38,8 @@
 static NSString * const kGoogleChromeHTTPScheme = @"googlechrome:";
 static NSString * const kGoogleChromeHTTPSScheme = @"googlechromes:";
 static NSString * const kGoogleChromeCallbackScheme = @"googlechrome-x-callback:";
+static NSString * const firefoxScheme = @"firefox:";
+static NSString * const firefoxCallbackScheme = @"firefox-x-callback:"
 
 static NSString *encodeByAddingPercentEscapes(NSString *input) {
   NSString *encodedValue = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(
@@ -67,16 +69,29 @@ static NSString *encodeByAddingPercentEscapes(NSString *input) {
       [[UIApplication sharedApplication] canOpenURL:callbackURL];
 }
 
-- (BOOL)openInChrome:(NSURL *)url {
-  return [self openInChrome:url withCallbackURL:nil createNewTab:NO];
+- (BOOL)isFirefoxInstalled {
+  NSURL *simpleURL = [NSURL URLWithString:firefoxScheme];
+  NSURL *callbackURL = [NSURL URLWithString:firefoxCallbackScheme];
+  return  [[UIApplication sharedApplication] canOpenURL:simpleURL] ||
+      [[UIApplication sharedApplication] canOpenURL:callbackURL];
 }
 
-- (BOOL)openInChrome:(NSURL *)url
+- (BOOL)openInChrome:(NSURL *)url {
+  return [self openURL:url simple:kGoogleChromeHTTPScheme callback:kGoogleChromeCallbackScheme withCallbackURL:nil createNewTab:NO];
+}
+
+- (BOOL)openInFirefox:(NSURL *)url {
+  return [self openURL:url simple:firefoxScheme callback:firefoxCallbackScheme withCallbackURL:nil createNewTab:NO];
+}
+
+- (BOOL)openURL:(NSURL *)url
+     simple:(NSString *)simpleScheme
+     callback:(NSString *)callbackScheme
      withCallbackURL:(NSURL *)callbackURL
-        createNewTab:(BOOL)createNewTab {
-  NSURL *chromeSimpleURL = [NSURL URLWithString:kGoogleChromeHTTPScheme];
-  NSURL *chromeCallbackURL = [NSURL URLWithString:kGoogleChromeCallbackScheme];
-  if ([[UIApplication sharedApplication] canOpenURL:chromeCallbackURL]) {
+     createNewTab:(BOOL)createNewTab {
+  NSURL *simpleURL = [NSURL URLWithString:simpleScheme];
+  NSURL *callbackURL = [NSURL URLWithString:callbackScheme];
+  if ([[UIApplication sharedApplication] canOpenURL:callbackURL]) {
     NSString *appName =
         [[NSBundle mainBundle]
             objectForInfoDictionaryKey:@"CFBundleDisplayName"];
@@ -87,48 +102,56 @@ static NSString *encodeByAddingPercentEscapes(NSString *input) {
     if ([scheme isEqualToString:@"http"] ||
         [scheme isEqualToString:@"https"]) {
 
-      NSMutableString *chromeURLString = [NSMutableString string];
-      [chromeURLString appendFormat:
+      NSMutableString *urlString = [NSMutableString string];
+      [urlString appendFormat:
           @"%@//x-callback-url/open/?x-source=%@&url=%@",
-          kGoogleChromeCallbackScheme,
+          callbackScheme,
           encodeByAddingPercentEscapes(appName),
           encodeByAddingPercentEscapes([url absoluteString])];
       if (callbackURL) {
-        [chromeURLString appendFormat:@"&x-success=%@",
+        [urlString appendFormat:@"&x-success=%@",
             encodeByAddingPercentEscapes([callbackURL absoluteString])];
       }
       if (createNewTab) {
-        [chromeURLString appendString:@"&create-new-tab"];
+        [urlString appendString:@"&create-new-tab"];
       }
 
-      NSURL *chromeURL = [NSURL URLWithString:chromeURLString];
+      NSURL *url = [NSURL URLWithString:urlString];
 
-      // Open the URL with Google Chrome.
-      return [[UIApplication sharedApplication] openURL:chromeURL];
+      // Open the URL with callback.
+      return [[UIApplication sharedApplication] openURL:url];
     }
-  } else if ([[UIApplication sharedApplication] canOpenURL:chromeSimpleURL]) {
+  } else if ([[UIApplication sharedApplication] canOpenURL:simpleURL]) {
     NSString *scheme = [url.scheme lowercaseString];
 
-    // Replace the URL Scheme with the Chrome equivalent.
-    NSString *chromeScheme = nil;
+    // Replace the URL Scheme with the Browser equivalent.
+    NSString *browserScheme = nil;
     if ([scheme isEqualToString:@"http"]) {
-      chromeScheme = kGoogleChromeHTTPScheme;
+      if ([simpleScheme isEqualToString:kGoogleChromeHTTPScheme]) {
+        browserScheme = kGoogleChromeHTTPScheme;
+      } else {
+        browserScheme = firefoxScheme;
+      }
     } else if ([scheme isEqualToString:@"https"]) {
-      chromeScheme = kGoogleChromeHTTPSScheme;
+      if ([callbackScheme isEqualToString:kGoogleChromeCallbackScheme]) {
+        browserScheme = kGoogleChromeHTTPSScheme;
+      } else {
+        browserScheme = firefoxCallbackScheme;
+      }
     }
 
-    // Proceed only if a valid Google Chrome URI Scheme is available.
-    if (chromeScheme) {
+    // Proceed only if a valid URI Scheme is available.
+    if (browserScheme) {
       NSString *absoluteString = [url absoluteString];
       NSRange rangeForScheme = [absoluteString rangeOfString:@":"];
       NSString *urlNoScheme =
           [absoluteString substringFromIndex:rangeForScheme.location + 1];
-      NSString *chromeURLString =
-          [chromeScheme stringByAppendingString:urlNoScheme];
-      NSURL *chromeURL = [NSURL URLWithString:chromeURLString];
+      NSString *urlString =
+          [browserScheme stringByAppendingString:urlNoScheme];
+      NSURL *url = [NSURL URLWithString:urlString];
 
-      // Open the URL with Google Chrome.
-      return [[UIApplication sharedApplication] openURL:chromeURL];
+      // Open the URL 
+      return [[UIApplication sharedApplication] openURL:url];
     }
   }
   return NO;
