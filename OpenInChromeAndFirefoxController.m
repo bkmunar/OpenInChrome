@@ -94,8 +94,8 @@ callback:(NSString *)callbackScheme
 withCallbackURL:(NSURL *)callbackURL
 createNewTab:(BOOL)createNewTab {
     NSURL *simpleURL = [NSURL URLWithString:simpleScheme];
-    NSURL *callbackURL = [NSURL URLWithString:callbackScheme];
-    if ([[UIApplication sharedApplication] canOpenURL:callbackURL]) {
+    NSURL *callback = [NSURL URLWithString:callbackScheme];
+    if ([[UIApplication sharedApplication] canOpenURL:callback]) {
         NSString *appName =
         [[NSBundle mainBundle]
            objectForInfoDictionaryKey:@"CFBundleDisplayName"];
