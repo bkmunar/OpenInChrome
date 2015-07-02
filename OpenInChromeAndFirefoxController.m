@@ -122,13 +122,13 @@ createNewTab:(BOOL)createNewTab {
 
         NSURL *url = [NSURL URLWithString:urlString];
 
-            // Open the URL with callback.
+        // Open the URL with callback.
         return [[UIApplication sharedApplication] openURL:url];
     }
 } else if ([[UIApplication sharedApplication] canOpenURL:simpleURL]) {
     NSString *scheme = [url.scheme lowercaseString];
 
-        // Replace the URL Scheme with the Browser equivalent.
+    // Replace the URL Scheme with the Browser equivalent.
     NSString *browserScheme = nil;
     if ([scheme isEqualToString:@"http"]) {
         if ([simpleScheme isEqualToString:kGoogleChromeHTTPScheme]) {
@@ -144,7 +144,7 @@ createNewTab:(BOOL)createNewTab {
         }
     }
     
-        // Proceed only if a valid URI Scheme is available.
+    // Proceed only if a valid URI Scheme is available.
     if (browserScheme) {
         NSString *absoluteString = [url absoluteString];
         NSRange rangeForScheme = [absoluteString rangeOfString:@":"];
@@ -154,7 +154,7 @@ createNewTab:(BOOL)createNewTab {
         [browserScheme stringByAppendingString:urlNoScheme];
         NSURL *url = [NSURL URLWithString:urlString];
         
-            // Open the URL 
+        // Open the URL
         return [[UIApplication sharedApplication] openURL:url];
     }
 }
